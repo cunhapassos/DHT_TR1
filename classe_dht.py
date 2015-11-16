@@ -28,14 +28,17 @@ class DHT:
 				"""
 				msg, no = s.recvfrom(1024)
 				dest = (no[0], no[1])
+				
 				if (msg == 'Hello'):
 					print ("No "+ str(no[0])+" diz: "+ msg)
 					id = self.gerarID()
 					print(id)
 					s.sendto(str(id), dest)
-					s.settimeout(2) # inicia aguardo de resposta Ack timeOut 
+					s.settimeout(2) # inicia aguardo de resposta Ack timeOut
+					 
 				if(msg == 'Ack'):
 					print ("No "+ str(no[0])+" diz: "+ msg)
+					self.nos[id] = (no[0], no[1]) # acrescenta novo no (com seu ip e porta ) ao dicionario de nos
 					s.settimeout(None) 
 			except socket.timeout: # se nao receber o ack
 				s.sendto(id, dest)
@@ -45,10 +48,12 @@ class DHT:
 	# Gera id do novo no	
 	def gerarID(self):
 		id = int(random.uniform(0, 2**K))
-		m = md5.new()
-		m.update(str(id))
-		return long(m.hexdigest(), 16)
-	
+		while (id in self.nos): # verifica se o id ja exites na lista de nos
+			id = int(random.uniform(0, 2**K))
+		#m = md5.new()
+		#m.update(str(id))
+		#return long(m.hexdigest(), 16)
+		return id
 
 
 def main():
