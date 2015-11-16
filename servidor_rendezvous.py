@@ -1,4 +1,13 @@
 import socket
+import random
+import md5
+k = 3
+
+def gerarID():
+	id = int(random.uniform(0, 2**k))
+	m = md5.new()
+	m.update(str(id))
+	return long(m.hexdigest(), 16)
 
 host = socket.gethostname()
 port = 12345
@@ -7,7 +16,6 @@ s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((host, port))
 
 print "Servidor Iniciado"
-#c = True
 
 while True:
 	try:
@@ -20,8 +28,9 @@ while True:
 		dest = (no[0], no[1])
 		if (msg == 'Hello'):
 			print ("No "+ str(no[0])+" diz: "+ msg)
-			id = '1'
-			s.sendto(id, dest)
+			id = gerarID()
+			print(id)
+			s.sendto(str(id), dest)
 			s.settimeout(2) # inicia aguardo de resposta Ack timeOut 
 		if(msg == 'Ack'):
 			print ("No "+ str(no[0])+" diz: "+ msg)
@@ -29,5 +38,4 @@ while True:
 	except socket.timeout: # se nao receber o ack
 		s.sendto(id, dest)
 		s.settimeout(2)
-
 s.close()
