@@ -9,7 +9,7 @@ def gerarID():
 	m.update(str(id))
 	return long(m.hexdigest(), 16)
 
-host = socket.gethostname()
+host = socket.gethostbyname(socket.gethostname()) # obtem o endereco IP da maquina local a partir do hostname da maquina local
 port = 12345
 orig = (host, port)
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
