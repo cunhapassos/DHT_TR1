@@ -11,84 +11,47 @@ class DHT:
 		self.tamanho_rede = 2**K
 		self.nos = {}
 		self.ids = []
+
 		self.root = {} # root (id:(IP, Porta))
 		
 		#Inicializa o servidor rendezvous
-		host = socket.gethostname()
+		host = socket.gethostbyname(socket.gethostname()) # obtem o endereco IP da maquina local a partir do hostname da maquina local
 		porta = 12345
 		servidor = (host, porta)
-		s = socketUDP(servidor)
+		serv = socketUDP(servidor)
 		
+		msg = ""
 		while msg != "QSAIR": 
-			msg, orig = serv.receber(1024)
+			msg, ender = serv.receber(1024)
 			
 			if (msg == 'Hello') and (len(self.nos) < K-1):
-				print ("No "+ str(no[0])+" diz: "+ msg)
+				print ("No "+ str(ender[0])+" diz: "+ msg)
 				id = self.gerarID(1)
+				
 				print(id)
-				env = str(id)
-				s.enviar(env, orig)	# envia ID do no
-				self.nos[id] = (no[0], no[1]) # acrescenta novo no (com seu ip e porta ) ao dicionario de nos
+				
+				#serv.enviar(env, ender)	# envia ID do no
+				self.nos[id] = [ender[0], ender[1]] # acrescenta novo no (com seu ip e porta ) ao dicionario de nos
 				
 				# OBS: verificar caso de n conseguir ter sucesso na entrega da mensagem
-				if self.root == None:
-					env = 'root' 
-					s.enviar(env, orig) # informa ao no que ele eh o root
+				if not self.root: # se o dicionario esta vazio
+					self.root[id] = [ender[0], ender[1]] 
+					
+					print "Root serv"
+					env = str(id) +'|'+ str(id) +'|'+ str(ender[0]) +'|'+ str(ender[1])
+					serv.enviar(env, ender) # informa ao no que ele eh o root
 				else:
-					env = str(self.root)
-					s.enviar(env, orig) # informa ao no qual no eh o root
+					rootID = self.root.keys()
+					rootIP, rootPorta = self.root[rootID[0]]
 					
+					env = str(id) +'|'+ str(rootID[0]) +'|'+ str(rootIP) +'|'+ str(rootPorta) 
+					serv.enviar(env, ender) # informa ao no qual no eh o root
 					
-			elif #  PAREI AKI
-			
-			
+			elif len(self.nos) == K-1:
+				print "A rede ja esta cheia!\n"
+				serv.enviar("RC", ender) # informa a um no que deseja entrar na rede  que a rede esta cheia
 		serv.desconectar()
-"""
-		while True:
-			try:
-				"""
-					Falta tratar ordem das mensagens
-					Falta tratar chegada de mensagens duplicadas no servidor
-				"""
-				msg, no = s.recvfrom(1024)
-				dest = (no[0], no[1])
-				
-				if (msg == 'Hello') and (len(self.nos) < K-1):
-					print ("No "+ str(no[0])+" diz: "+ msg)
-					id = self.gerarID(1)
-					print(id)
-					env = str(id)
-					s.sendto(env, dest) # envia ID do no
-					s.settimeout(2) # inicia aguardo de resposta Ack timeOut 
 
-					
-					
-				elif(msg == 'Ack_id'): # recebe o Ack do ID que foi enviado
-					print ("No "+ str(no[0])+" diz: "+ msg + "\n")
-					#s.settimeout(None)
-					if self.root == None: # se a rede ainda na possui root
-						env = 'root'
-						s.sendto(env, dest) # Envia informacao que o no eh o root
-						s.settimeout(2) # inicia aguardo de resposta Ack timeOut 
-					else:
-						self.nos[id] = (no[0], no[1]) # acrescenta novo no (com seu ip e porta ) ao dicionario de nos
-						env = str(self.root)
-						s.sendto(env, dest)
-					
-				elif (msg == 'Ack_root'): # recebe o Ack que o noh sabe que eh o root
-					s.settimeout(None)
-					self.nos[id] = (no[0], no[1]) # acrescenta novo no (com seu ip e porta ) ao dicionario de nos
-					root[id] = (no[0], no[1]) # coloca o primeiro no que entrou na rede como root
-				
-				elif len(self.nos) == K-1:
-					print "A rede ja esta cheia!\n"
-					s.sendto("RC", dest) # informa a um no que deseja entrar na rede  que a rede esta cheia
-					
-			except socket.timeout: # se nao receber os retornos 
-				s.sendto(env, dest)
-				s.settimeout(2)
-		s.close()
-"""	
 	# Gera id do novo no	
 	def gerarID(self, op = 1):
 		if op == 1:
