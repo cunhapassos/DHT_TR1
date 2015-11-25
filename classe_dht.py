@@ -4,11 +4,11 @@ import md5
 from classe_no import *
 from classe_socket import *
 
-K = 7 # numero de bits
+K = 20 # numero de bits
 class DHT:
 	
 	def __init__(self):
-		self.tamanho_rede = 2**K
+
 		self.nos = {}
 		self.ids = []
 

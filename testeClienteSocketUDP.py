@@ -13,9 +13,9 @@ import socket
 from socketUDP import *
 
 host = socket.gethostbyname(socket.gethostname()) # obtem o endereco IP da maquina local a partir do hostname da maquina local
-port = 12346 # como o ip do cliente e servidor sao iguais a porta deve ser diferente, caso contrario da pala 
+port = 12348 # como o ip do cliente e servidor sao iguais a porta deve ser diferente, caso contrario da pala 
 orig = (host, port)
-dest = (host, 12345)
+dest = (host, 12346)
 serv = socketUDP(orig)
 
 print('Para sair use QSAIR') 
