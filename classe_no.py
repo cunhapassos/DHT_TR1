@@ -6,10 +6,7 @@ MAX_NO = 2**N
 class No:
 	def __init__(self, endereco):
 		
-		self.root ={}
 		self.derivacao = {}
-		self.sucessor = {}
-		self.antecessor = {}
 		self.tabelaFinger = {}
 
 		self.host, self.port = endereco
@@ -17,64 +14,62 @@ class No:
 		
 	# solicita entrada na rede DHT
 	def entrarDHT(self, destino):
-		env = 'Hello'
-		self.clien.enviar(env, destino)
+		
+		comando = 'Hello'
+		self.clien.enviar(comando, destino)
 		msg, endereco = self.clien.receber(1024)
 		
-		print msg
-		
 		if msg == 'RC':
-			print "Nao posso entra, rede cheia! \n"
-		
+			print "Nao posso entrar, a rede esta cheia! \n"
 		else:
 			msg = msg.split('|', 4)	
 			self.id = int(msg[0])
-			self.root["rootID"] = int(msg[1])
-			self.root["rootHost"] = msg[2]
-			self.root["rootPorta"] = int(msg[3])
+			self.root = (int(msg[1]), msg[2], int(msg[3]))
 			
 			if msg[0] == msg[1]:
-				# preecncher table finger
-				for i in range(N):
-					self.derivacao[i] = (self.id + (2**i)) % (MAX_NO)
-					finger = {"indice": i, "deriv": self.derivacao[i], "id": int(msg[1]), "host": msg[2], "porta": int(msg[3])}
-					self.tabelaFinger[i] = finger 
-				
-				self.sucessor = {"id": msg[1], "host": msg[2], "porta": msg[3]} # pode ser tirado posteriormente
-				self.antecessor = {"id": msg[1], "host": msg[2], "porta": msg[3]} 
+				self.sucessor = (msg[1], msg[2], msg[3]) # pode ser tirado posteriormente
+				self.antecessor = (msg[1], msg[2], msg[3])
 				self.escutarRede()
-			
 			else:
-				
-				print "Inserindo No no DHT..."
-				self.inserirNoDHT()
-				print "Ant " + str(self.antecessor) + " Suc " + str(self.sucessor)
+				no = (self.id, self.host, self.port)
+				self.inserirNo(no, self.root)
 				self.escutarRede()
-				# buscar local no DHT circular
-				# inserir novo no
-				# atualizar finger table
-	
-	
-		
-	# Inserir um no no DHT
-	def inserirNoDHT(self):
-		print "Root: " + str(self.root)
-		no = (self.id, self.host, self.port)
-		no1 = (self.root["rootID"], self.root["rootHost"], self.root["rootPorta"])
-		noSuc = self.encontrarSucessor(no, no1)
-		noAnt = self.encontrarAntecessor(noSuc)
-		
-		self.sucessor["id"] = noSuc[0]
-		self.sucessor["host"] = noSuc[1]
-		self.sucessor["porta"] = noSuc[2]
-		self.antecessor["id"] = noAnt[0]
-		self.antecessor["host"] = noAnt[1]
-		self.antecessor["porta"] = noAnt[2]
+							
+	def inserirNo(self, no, no1):
 
- 		
-		self.atualizarSuc(noAnt, no)
-		self.atualizarAnt(noSuc, no)
-		
+		if no1[0] > no[0]:
+			# pede antecessor do root
+			antNo1 = self.encontrarAntecessor(no1)
+			while (no1[0] > no[0]) and (antNo1[0] < no1[0]):
+				no1 = antNo1
+				antNo1 = self.encontrarAntecessor(no1)
+
+			if no1[0] > no[0]:
+				self.sucessor = no1
+				self.antecessor = antNo1
+				self.atualizarAnt(no1, no)
+				self.atualizarSuc(antNo1, no)
+			else:
+				self.sucessor = self.encontrarSucessor(no1)
+				self.antecessor = no1
+				self.atualizarAnt(self.sucessor, no)
+				self.atualizarSuc(no1, no)
+		else:
+			sucNo1 = self.encontrarSucessor(no1)
+			while (no1[0] < no[0]) and (sucNo1[0] > no1[0]):	
+				no1 = sucNo1
+				sucNo1 = self.encontrarSucessor(no1)
+			if no1[0] < no[0]:
+				self.sucessor = sucNo1
+				self.antecessor = no1
+				self.atualizarAnt(sucNo1, no)
+				self.atualizarSuc(no1, no)
+			else:
+				self.sucessor = no1
+				self.antecessor = self.encontrarAntecessor(no1)
+				self.atualizarAnt(no1, no)
+				self.atualizarSuc(self.antecessor, no)
+		print "No: " + str(no) + " Ant " + str(self.antecessor) + " Suc " + str(self.sucessor)
 	
 	def atualizarSuc(self, no, suc):
 		noId, noHost, noPort = no
@@ -89,36 +84,16 @@ class No:
 		env = 'atuAnt' + '|' + str(antId) + '|' + antHost + '|' + str(antPort)
 
 		self.clien.enviar(env, (noHost, noPort))
-		
-	######OBS : ESSA FUNCAO AINDA ESTA COM PROBLEMA - N ESTA INSERINDO NA ORDEM CERTA	
-	# Enconta o sucessor de um no DHT a partir de outro no
-	def encontrarSucessor(self, no, no1):
-		# nesse caso No e No1  do tipo (id, host, port)
+			
+	# Enconta o sucessor de um no 
+	def encontrarSucessor(self, no):
 		noId, noHost, noPort = no
-		no1Id, no1Host, no1Port = no1
-
-		# envia mensagem ao no1 perguntando quem eh seu sucessor
-		self.clien.enviar('suc', (no1Host, no1Port))
+		self.clien.enviar('suc', (noHost, noPort))
 		noSuc, endereco = self.clien.receber(1024)
 		noSuc = noSuc.split('|', 3)
 		noSuc = (int(noSuc[0]), noSuc[1], int(noSuc[2]))
 		
-		print "NoId "+ str(noId) + " no1Id " + str(no1Id) + " noSuc[0] " + str(noSuc[0])
-		"""
-		if not((noId > no1Id) ^ (noSuc[0] > no1Id)):
-			print "NoId "+ str(noId) + " no1Id " + str(no1Id) + " noSuc[0] " + str(noSuc[0])
-			return self.encontrarSucessor(no, (int(noSuc[0]), noSuc[1], int(noSuc[2])))
-		"""
-		if noSuc[0] == no1Id:
-			return noSuc
-		elif no1Id > noSuc[0] > noId:
-			return noSuc
-		elif noId > no1Id > noSuc[0]:
-			return noSuc
-		elif not(noSuc[0] > noId > no1Id):
-			return self.encontrarSucessor(no, (int(noSuc[0]), noSuc[1], int(noSuc[2])))
-		else:
-			return noSuc
+		return noSuc
 	
 	def encontrarAntecessor(self, no):
 		noId, noHost, noPort = no
@@ -129,33 +104,30 @@ class No:
 		
 		return noAnt
 	
-	
 	def escutarRede(self):
 		while True:
 			comando, endereco = self.clien.receber(1024)
 			comando = comando.split('|')
 			
 			if comando[0] == 'suc':	
-				env =  str(self.tabelaFinger[0]["id"]) +'|'+ str(self.tabelaFinger[0]["host"]) +'|'+ str(self.tabelaFinger[0]["porta"])
-				print "Enviando sucessor: " + env
+				env =  str(	self.sucessor[0]) +'|'+ str(self.sucessor[1]) +'|'+ str(self.sucessor[2])
+				print "Enviando sucessor: " + env + " para " + str(endereco)
 				self.clien.enviar(env, endereco)
 			if comando[0] == 'ant':
-				env =  str(self.antecessor["id"]) +'|'+ str(self.antecessor["host"]) +'|'+ str(self.antecessor["porta"])
-				print "Enviando antecessor: " + env
+				env =  str(self.antecessor[0]) +'|'+ str(self.antecessor[1]) +'|'+ str(self.antecessor[2])
+				print "Enviando antecessor: " + env + " para " + str(endereco)
 				self.clien.enviar(env, endereco)
 			if comando[0] == 'atuSuc':
-				self.sucessor["id"] = comando[1]
-				self.sucessor["host"] = comando[2]
-				self.sucessor["porta"] = comando[3]
+				self.sucessor = (comando[1], comando[2], comando[3])
+				print "Atualizado sucessor de: " + str(self.id) + " para " + str(self.sucessor)
 				# atualizar finger table
 			
 			if comando[0] == 'atuAnt':
-				self.antecessor["id"] = comando[1]
-				self.antecessor["host"] = comando[2]
-				self.antecessor["porta"] = comando[3]
+				self.antecessor = (comando[1], comando[2], comando[3])
+				print "Atualizado antecessor de: " + str(self.id) + " para " + str(self.antecessor)
 				# atualizar finger table	
 			#CONTINUAR IMPLEMENTACAO AKI
-	
+
 def	main():
 	
 	host = socket.gethostbyname(socket.gethostname()) # obtem o endereco IP da maquina local a partir do hostname da maquina local
