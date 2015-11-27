@@ -4,7 +4,7 @@ import md5
 from classe_no import *
 from classe_socket import *
 
-K = 20 # numero de bits
+
 class DHT:
 	
 	def __init__(self):
@@ -24,7 +24,7 @@ class DHT:
 		while msg != "QSAIR": 
 			msg, ender = serv.receber(1024)
 			
-			if (msg == 'Hello') and (len(self.nos) < K-1):
+			if (msg == 'Hello') and (len(self.nos) < MAX_NO - 1):
 				print ("No "+ str(ender[0])+" diz: "+ msg)
 				id = self.gerarID(1)
 				
@@ -47,7 +47,7 @@ class DHT:
 					env = str(id) +'|'+ str(rootID[0]) +'|'+ str(rootIP) +'|'+ str(rootPorta) 
 					serv.enviar(env, ender) # informa ao no qual no eh o root
 					
-			elif len(self.nos) == K-1:
+			elif len(self.nos) == MAX_NO - 1:
 				print "A rede ja esta cheia!\n"
 				serv.enviar("RC", ender) # informa a um no que deseja entrar na rede  que a rede esta cheia
 		serv.desconectar()
@@ -55,18 +55,18 @@ class DHT:
 	# Gera id do novo no	
 	def gerarID(self, op = 1):
 		if op == 1:
-			id = int(random.uniform(0, K - 1)) # gera id aleatorio entre 0 e 
+			id = int(random.uniform(0, MAX_NO - 1)) # gera id aleatorio entre 0 e 
 			while (id in self.nos): # verifica se o id ja exites na lista de nos
-				id = int(random.uniform(0, K - 1))
+				id = int(random.uniform(0, MAX_NO - 1))
 			#m = md5.new()
 			#m.update(str(id))
 			#return long(m.hexdigest(), 16)
 			return id
 		else:
-			id = 2^(int(random.uniform(1, K)))
+			id = 2^(int(random.uniform(1, MAX_NO)))
 			while (id in self.nos): # verifica se o id ja exites na lista de nos
-				id = 2^(int(random.uniform(1, K)))
-
+				id = 2^(int(random.uniform(1, MAX_NO)))
+			return id
 		
 		
 def main():
