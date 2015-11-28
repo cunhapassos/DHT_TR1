@@ -14,7 +14,7 @@ N = 6
 MAX_NO = 2**N
 class No:
 	def __init__(self, endereco):
-		self.sucessorIm = ()
+
 		self.host, self.port = endereco
 		self.clien = socketUDP(endereco) # Cria um socket
 		
@@ -146,7 +146,7 @@ class No:
 				
 			if comando[0] =='atuSucIm':
 				self.sucessorIm = (comando[1], comando[2], comando[3])
-				print "Atualizado sucessorIm de: " + str(self.id) + " para " + str(self.sucessorIm)
+				print "Atualizado sucessorIm de: " + str(self.id) + " para " + str(self.successorIm)
 				
 			if comando[0] == 'atuAnt':
 				self.antecessor = (comando[1], comando[2], comando[3])
