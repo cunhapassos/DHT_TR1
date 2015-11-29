@@ -13,7 +13,7 @@ from classe_socket import *
 N = 6
 MAX_NO = 2**N
 class No:
-	def __init__(self, endereco):
+	def __init__(self, endereco, arq):
 		self.sucessorIm = ()
 		self.host, self.port = endereco
 		self.clien = socketUDP(endereco) # Cria um socket
@@ -159,8 +159,10 @@ def	main():
 	host = socket.gethostbyname(socket.gethostname()) # obtem o endereco IP da maquina local a partir do hostname da maquina local
 	porta = raw_input("Escreva um numero inteiro para a porta: ") # como o ip do cliente e servidor sao iguais a porta deve ser diferente, caso contrario da pala
 	ender = (host, int(porta))
+	
+	arquivo = raw_input("Digite o nome do arquivo que contem o nó: ")
 
-	n1 = No(ender)
+	n1 = No(ender, arquivo)
 	rendezvous = (socket.gethostbyname(socket.gethostname()), 12345)
 	n1.entrarDHT(rendezvous)
 
