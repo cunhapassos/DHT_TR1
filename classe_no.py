@@ -6,8 +6,9 @@ classe_no_finger.py
 Created by Paulo Passos on 2015-11-27.
 Copyright (c) 2015 __MyCompanyName__. All rights reserved.
 """
-
-import socket               # Importa modulo socket
+import time
+import socket
+import threading               # Importa modulo socket
 from classe_socket import *
 
 N = 6
@@ -32,9 +33,9 @@ class No:
 			self.root = (int(msg[1]), msg[2], int(msg[3]))
 			
 			if msg[0] == msg[1]:
-				self.sucessor = (msg[1], msg[2], msg[3]) # pode ser tirado posteriormente
-				self.antecessor = (msg[1], msg[2], msg[3])
-				self.sucessorIm = (msg[1], msg[2], msg[3]) # Sucessor do Sucessor
+				self.sucessor = (int(msg[1]), msg[2], int(msg[3])) # pode ser tirado posteriormente
+				self.antecessor = (int(msg[1]), msg[2], int(msg[3]))
+				self.sucessorIm = (int(msg[1]), msg[2], int(msg[3])) # Sucessor do Sucessor
 				self.escutarRede()
 				
 				#finguer table
@@ -49,84 +50,50 @@ class No:
 	def inserirNo(self, no, no1):
 		if no1[0] > no[0]:
 			# pede antecessor do root
-			antNo1 = self.encontrarAntecessor(no1)
+			antNo1 = encontrarAntecessor(no1, self.clien)
 			while (no1[0] > no[0]) and (antNo1[0] < no1[0]):
 				no1 = antNo1
-				antNo1 = self.encontrarAntecessor(no1)
+				antNo1 = encontrarAntecessor(no1, self.clien)
 
 			if no1[0] > no[0]:
 				self.sucessor = no1
-				self.sucessorIm = self.encontrarSucessor(no1)
+				self.sucessorIm = encontrarSucessor(no1, self.clien)
 				self.antecessor = antNo1
-				self.atualizarAnt(no1, no)
-				self.atualizarSuc(antNo1, no)
-				self.atualizarSucIm(antNo1, no1)
+				atualizarAnt(no1, no, self.clien)
+				atualizarSuc(antNo1, no, self.clien)
+				atualizarSucIm(antNo1, no1, self.clien)
 			else:
-				self.sucessor = self.encontrarSucessor(no1)
-				self.sucessorIm = self.encontrarSucessor(self.sucessor)
+				self.sucessor = encontrarSucessor(no1, self.clien)
+				self.sucessorIm = encontrarSucessor(self.sucessor, self.clien)
 				self.antecessor = no1
-				self.atualizarSuc(no1, no)
-				self.atualizarAnt(self.sucessor, no)
-				self.atualizarSucIm(no1, self.sucessor)
+				atualizarSuc(no1, no, self.clien)
+				atualizarAnt(self.sucessor, no, self.clien)
+				atualizarSucIm(no1, self.sucessor, self.clien)
 		else:
-			sucNo1 = self.encontrarSucessor(no1)
+			sucNo1 = encontrarSucessor(no1, self.clien)
 			while (no1[0] < no[0]) and (sucNo1[0] > no1[0]):	
 				no1 = sucNo1
-				sucNo1 = self.encontrarSucessor(no1)
+				sucNo1 = encontrarSucessor(no1, self.clien)
 			if no1[0] < no[0]:
 				self.sucessor = sucNo1
-				self.sucessorIm = self.encontrarSucessor(sucNo1)
+				self.sucessorIm = encontrarSucessor(sucNo1, self.clien)
 				self.antecessor = no1
-				self.atualizarSuc(no1, no)
-				self.atualizarAnt(sucNo1, no)
-				self.atualizarSucIm(no1, sucNo1)
+				atualizarSuc(no1, no, self.clien)
+				atualizarAnt(sucNo1, no, self.clien)
+				atualizarSucIm(no1, sucNo1, self.clien)
 			else:
 				self.sucessor = no1
 				self.sucessorIm = sucNo1
-				self.antecessor = self.encontrarAntecessor(no1)
-				self.atualizarAnt(no1, no)
-				self.atualizarSuc(self.antecessor, no)
-				self.atualizarSucIm(self.antecessor, no1)
+				self.antecessor = encontrarAntecessor(no1, self.clien)
+				atualizarAnt(no1, no, self.clien)
+				atualizarSuc(self.antecessor, no, self.clien)
+				atualizarSucIm(self.antecessor, no1, self.clien)
 		print "No: " + str(no) + " Ant " + str(self.antecessor) + " Suc " + str(self.sucessor)
 	
-	def atualizarSuc(self, no, suc):
-		noId, noHost, noPort = no
-		sucId, sucHost, sucPort = suc
-		env = 'atuSuc' + '|' + str(sucId) + '|' + sucHost + '|' + str(sucPort)
-		self.clien.enviar(env, (noHost, noPort))
-		
-	def atualizarSucIm(self, no, sucIm):
-		noId, noHost, noPort = no
-		sucId, sucHost, sucPort = sucIm
-		env = 'atuSucIm' + '|' + str(sucId) + '|' + sucHost + '|' + str(sucPort)
-		self.clien.enviar(env, (noHost, noPort))
-		
-	def atualizarAnt(self, no, ant):
-		noId, noHost, noPort = no
-		antId, antHost, antPort = ant
-		env = 'atuAnt' + '|' + str(antId) + '|' + antHost + '|' + str(antPort)
-		self.clien.enviar(env, (noHost, noPort))
-			
-	# Enconta o sucessor de um no 
-	def encontrarSucessor(self, no):
-		noId, noHost, noPort = no
-		self.clien.enviar('suc', (noHost, noPort))
-		noSuc, endereco = self.clien.receber(1024)
-		noSuc = noSuc.split('|', 3)
-		noSuc = (int(noSuc[0]), noSuc[1], int(noSuc[2]))
-		
-		return noSuc
-	
-	def encontrarAntecessor(self, no):
-		noId, noHost, noPort = no
-		self.clien.enviar('ant', (noHost, noPort))
-		noAnt, endereco = self.clien.receber(1024)
-		noAnt = noAnt.split('|', 3)
-		noAnt = (int(noAnt[0]), noAnt[1], int(noAnt[2]))
-		
-		return noAnt
 	
 	def escutarRede(self):
+		t = threading.Thread(target=ping, args=(self.clien, self))
+		t.start()
 		while True:
 			comando, endereco = self.clien.receber(1024)
 			comando = comando.split('|')
@@ -151,9 +118,86 @@ class No:
 			if comando[0] == 'atuAnt':
 				self.antecessor = (comando[1], comando[2], comando[3])
 				print "Atualizado antecessor de: " + str(self.id) + " para " + str(self.antecessor)
-				# atualizar finger table	
+				
+			if comando[0] == 'ping':
+				print 'pong'
+			# atualizar finger table	
 			#CONTINUAR IMPLEMENTACAO AKI
+			
+def atualizarSuc(no, suc, sock):
+	noId, noHost, noPort = no
+	sucId, sucHost, sucPort = suc
+	env = 'atuSuc' + '|' + str(sucId) + '|' + sucHost + '|' + str(sucPort)
+	sock.enviar(env, (noHost, noPort))
 
+def atualizarSucIm(no, sucIm, sock):
+	noId, noHost, noPort = no
+	sucId, sucHost, sucPort = sucIm
+	env = 'atuSucIm' + '|' + str(sucId) + '|' + sucHost + '|' + str(sucPort)
+	sock.enviar(env, (noHost, noPort))
+
+def atualizarAnt(no, ant, sock):
+	noId, noHost, noPort = no
+	antId, antHost, antPort = ant
+	env = 'atuAnt' + '|' + str(antId) + '|' + antHost + '|' + str(antPort)
+	sock.enviar(env, (noHost, noPort))
+
+# Enconta o sucessor de um no 
+def encontrarSucessor(no, sock):
+	noId, noHost, noPort = no
+	sock.enviar('suc', (noHost, noPort))
+	noSuc, endereco = sock.receber(1024)
+	noSuc = noSuc.split('|', 3)
+	noSuc = (int(noSuc[0]), noSuc[1], int(noSuc[2]))
+
+	return noSuc
+
+def encontrarAntecessor(no, sock):
+	noId, noHost, noPort = no
+	sock.enviar('ant', (noHost, noPort))
+	noAnt, endereco = sock.receber(1024)
+	noAnt = noAnt.split('|', 3)
+	noAnt = (int(noAnt[0]), noAnt[1], int(noAnt[2]))
+
+	return noAnt
+
+def ping(sock, no):
+	
+	while True:
+		time.sleep(3)
+	
+		noId, noHost, noPorta = no.sucessor
+		if noId != no.root[0]:
+			print "ping"
+			if 'ack' != sock.enviar('ping', (noHost, int(noPorta))):
+				print "Sucessor de " + str(no.id) + " nao responde!"
+				noId, noHost, noPorta = no.sucessorIm
+
+				if 'ack' == sock.enviar('ping', (noHost, noPorta)):
+					print "Atualizando sucessor..."
+					no.sucessor = no.sucessorIm
+					no.sucessorIm = encontrarSucessor(no.sucessor)
+					no.atualizarAnt(no.sucessor, (no.id, no.host, no.port))
+				else:
+					print "Nao foi posivel recuperar a rede!"
+'''
+def percorrerDHT(self, root):
+	if root == None:
+		print "DHT vazio"
+	else:
+		print "Nos DHT"
+		no = root
+		chave = self.Chave((no[1], no[2]))
+		print "Elemento: " + str(no[0]) + " chave: " + str(chave)
+		while no != root:
+			no = self.encontrarSucessor(no)
+			chave = self.Chave((no[1], no[2]))
+			print "No: " + str(no[0]) + " chave: " + str(chave)
+			
+'''			
+
+	
+	
 def	main():
 	
 	host = socket.gethostbyname(socket.gethostname()) # obtem o endereco IP da maquina local a partir do hostname da maquina local
@@ -163,6 +207,7 @@ def	main():
 	n1 = No(ender)
 	rendezvous = (socket.gethostbyname(socket.gethostname()), 12345)
 	n1.entrarDHT(rendezvous)
+
 
 	
 if __name__ == "__main__":
