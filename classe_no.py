@@ -14,10 +14,13 @@ from classe_socket import *
 N = 6
 MAX_NO = 2**N
 class No:
-	def __init__(self, endereco, arq):
+	def __init__(self, endereco, sock, arquivo):
 		self.sucessorIm = ()
+		self.derivacao = {}
+		self.atalho = {}
 		self.host, self.port = endereco
-		self.clien = socketUDP(endereco) # Cria um socket
+		self.clien = sock
+		self.nomeArq = arquivo
 		
 	# solicita entrada na rede DHT
 	def entrarDHT(self, destino):
@@ -36,7 +39,7 @@ class No:
 				self.sucessor = (int(msg[1]), msg[2], int(msg[3])) # pode ser tirado posteriormente
 				self.antecessor = (int(msg[1]), msg[2], int(msg[3]))
 				self.sucessorIm = (int(msg[1]), msg[2], int(msg[3])) # Sucessor do Sucessor
-				self.escutarRede()
+				#escutarRede(self)
 				
 				#finguer table
 				for i in range(N):
@@ -45,7 +48,7 @@ class No:
 			else:
 				no = (self.id, self.host, self.port)
 				self.inserirNo(no, self.root)
-				self.escutarRede()
+				#escutarRede(self)
 							
 	def inserirNo(self, no, no1):
 		if no1[0] > no[0]:
@@ -91,36 +94,39 @@ class No:
 		print "No: " + str(no) + " Ant " + str(self.antecessor) + " Suc " + str(self.sucessor)
 	
 	
-	def escutarRede(self):
-		t = threading.Thread(target=ping, args=(self.clien, self))
-		t.start()
-		while True:
-			comando, endereco = self.clien.receber(1024)
-			comando = comando.split('|')
-			
-			if comando[0] == 'suc':	
-				env =  str(	self.sucessor[0]) +'|'+ str(self.sucessor[1]) +'|'+ str(self.sucessor[2])
-				print "Enviando sucessor: " + env + " para " + str(endereco)
-				self.clien.enviar(env, endereco)
-			if comando[0] == 'ant':
-				env =  str(self.antecessor[0]) +'|'+ str(self.antecessor[1]) +'|'+ str(self.antecessor[2])
-				print "Enviando antecessor: " + env + " para " + str(endereco)
-				self.clien.enviar(env, endereco)
-			if comando[0] == 'atuSuc':
-				self.sucessor = (comando[1], comando[2], comando[3])
-				print "Atualizado sucessor de: " + str(self.id) + " para " + str(self.sucessor)
-				# atualizar finger table
-				
-			if comando[0] =='atuSucIm':
-				self.sucessorIm = (comando[1], comando[2], comando[3])
-				print "Atualizado sucessorIm de: " + str(self.id) + " para " + str(self.sucessorIm)
-				
-			if comando[0] == 'atuAnt':
-				self.antecessor = (comando[1], comando[2], comando[3])
-				print "Atualizado antecessor de: " + str(self.id) + " para " + str(self.antecessor)
-				
-			if comando[0] == 'ping':
-				print 'pong'
+def escutarRede(no, sock):
+	
+
+	while True:
+		print "ta na thread"
+		comando, endereco = sock.sock.recvfrom(1024)
+		comando = comando.split('|')
+		print str(comando)
+		if comando[0] == 'suc':	
+			env =  str(	no.sucessor[0]) +'|'+ str(no.sucessor[1]) +'|'+ str(no.sucessor[2])
+			print "Enviando sucessor: " + env + " para " + str(endereco)
+			sock.enviar(env, endereco)
+		if comando[0] == 'ant':
+			env =  str(no.antecessor[0]) +'|'+ str(no.antecessor[1]) +'|'+ str(no.antecessor[2])
+			print "Enviando antecessor: " + env + " para " + str(endereco)
+			sock.enviar(env, endereco)
+		if comando[0] == 'atuSuc':
+			no.sucessor = (comando[1], comando[2], comando[3])
+			print "Atualizado sucessor de: " + str(no.id) + " para " + str(no.sucessor)
+			# atualizar finger table
+		
+		if comando[0] =='atuSucIm':
+			no.sucessorIm = (comando[1], comando[2], comando[3])
+			print "Atualizado sucessorIm de: " + str(no.id) + " para " + str(no.sucessorIm)
+		
+		if comando[0] == 'atuAnt':
+			no.antecessor = (comando[1], comando[2], comando[3])
+			print "Atualizado antecessor de: " + str(no.id) + " para " + str(no.antecessor)
+		
+		if comando[0] == 'ping':
+			print 'pong'
+			sock.enviar('pong', endereco)
+
 			# atualizar finger table	
 			#CONTINUAR IMPLEMENTACAO AKI
 			
@@ -163,38 +169,48 @@ def encontrarAntecessor(no, sock):
 
 def ping(sock, no):
 	
-	while True:
-		time.sleep(3)
-	
-		noId, noHost, noPorta = no.sucessor
-		if noId != no.root[0]:
-			print "ping"
-			if 'ack' != sock.enviar('ping', (noHost, int(noPorta))):
-				print "Sucessor de " + str(no.id) + " nao responde!"
-				noId, noHost, noPorta = no.sucessorIm
+	noId, noHost, noPorta = no.sucessor
+	if noId != no.root[0]:
+		print "ping"
+		sock.enviar('ping', (noHost, int(noPorta)))
+		msg, end = sock.receber(1024)
+		if msg != 'pong':
+			print "Sucessor de " + str(no.id) + " nao responde!"
+			noId, noHost, noPorta = no.sucessorIm
+			
+			sock.enviar('ping', (noHost, int(noPorta)))
+			msg, end = sock.receber(1024)
+			if msg == 'pong':
+				print "Atualizando sucessor..."
+				no.sucessor = no.sucessorIm
+				no.sucessorIm = encontrarSucessor(no.sucessor)
+				no.atualizarAnt(no.sucessor, (no.id, no.host, no.port))
+			else:
+				print "Nao foi posivel recuperar a rede!"
 
-				if 'ack' == sock.enviar('ping', (noHost, noPorta)):
-					print "Atualizando sucessor..."
-					no.sucessor = no.sucessorIm
-					no.sucessorIm = encontrarSucessor(no.sucessor)
-					no.atualizarAnt(no.sucessor, (no.id, no.host, no.port))
-				else:
-					print "Nao foi posivel recuperar a rede!"
-'''
-def percorrerDHT(self, root):
+def buscarArq(no, arq):
+	verif = raw_input("Deseja buscar algum arquivo? (y/n)")
+	while(verif == "y"):
+		arq = raw_input("Qual arquivo deseja buscar? ")
+		endBusca = percorrerDHT(no, arq)
+		if (endBusca == None):
+			print "Não foi possivel encontrar o arquivo na rede"
+		else:
+			print "Arquivo encontrado no "+endBusca
+		verif = raw_input("Deseja buscar algum arquivo? (y/n)")
+	
+def percorrerDHT(root, arq):
 	if root == None:
 		print "DHT vazio"
+		return None
 	else:
 		print "Nos DHT"
 		no = root
-		chave = self.Chave((no[1], no[2]))
-		print "Elemento: " + str(no[0]) + " chave: " + str(chave)
 		while no != root:
-			no = self.encontrarSucessor(no)
-			chave = self.Chave((no[1], no[2]))
-			print "No: " + str(no[0]) + " chave: " + str(chave)
-			
-'''			
+			no = encontrarSucessor(no)
+			if(root.nomeArq == no.nomeArq):
+				return str("No: " + str(no[0]))
+		return None		
 
 	
 	
@@ -203,13 +219,19 @@ def	main():
 	host = socket.gethostbyname(socket.gethostname()) # obtem o endereco IP da maquina local a partir do hostname da maquina local
 	porta = raw_input("Escreva um numero inteiro para a porta: ") # como o ip do cliente e servidor sao iguais a porta deve ser diferente, caso contrario da pala
 	ender = (host, int(porta))
-	
 	arquivo = raw_input("Digite o nome do arquivo que contem o nó: ")
+	clien = socketUDP(ender) # Cria um socket
 
-	n1 = No(ender, arquivo)
+	n1 = No(ender, clien, arquivo)
 	rendezvous = (socket.gethostbyname(socket.gethostname()), 12345)
 	n1.entrarDHT(rendezvous)
-
+	print "entra na thread"
+	t = threading.Thread(target=escutarRede, args=(n1,clien))
+	t1 = threading.Thread(target=buscarArq, args=(n1,arquivo))
+	#t.daemon = True
+	t.start()
+	t1.start()
+	clien.desconectar
 
 	
 if __name__ == "__main__":

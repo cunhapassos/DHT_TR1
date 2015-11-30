@@ -1,4 +1,5 @@
 import socket
+import time
 
 class socketUDP:
 	
@@ -15,7 +16,7 @@ class socketUDP:
 		#print "Enviando mensagem para " + dest[0]
 		self.sock.sendto(msg, dest)
 		
-		while flag < 20:
+		while flag < 200:
 			#print "Aguardando ack..."
 			
 			try:
@@ -35,7 +36,7 @@ class socketUDP:
 		return 'nack'
 	# OBS: falta tratar casos em que nunca se recebe o ack aou ackr de volta, talvez colocar um contador no lugar da flag resolva		
 	def receber(self, tam):
-		self.sock.settimeout(None)
+		#self.sock.settimeout(None)
 		msg, orig = self.sock.recvfrom(tam)
 		flag = 0
 		
@@ -43,7 +44,7 @@ class socketUDP:
 		pacote = 'ack|' + msg
 		self.sock.sendto(pacote, orig)
 		
-		while flag < 20:
+		while flag < 200:
 			try:
 				dado, orig1 = self.sock.recvfrom(1024)
 				dados = dado.split('|', 1)
