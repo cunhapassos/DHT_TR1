@@ -208,7 +208,7 @@ def percorrerDHT(root, arq):
 		no = root
 		while no != root:
 			no = encontrarSucessor(no)
-			if(root.nomeArq == no.nomeArq):
+			if(root.nomeArq == arq):
 				return str("No: " + str(no[0]))
 		return None		
 
