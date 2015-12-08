@@ -4,7 +4,7 @@
 classe_no_finger.py
 
 Created by Paulo Passos on 2015-11-27.
-Copyright (c) 2015 __MyCompanyName__. All rights reserved.
+Copyright (c) 2015 __UnB__. All rights reserved.
 """
 import time
 import socket
@@ -14,94 +14,100 @@ from classe_socket import *
 N = 6
 MAX_NO = 2**N
 class No:
+<<<<<<< Updated upstream
 	def __init__(self, endereco, sock, arquivo):
+=======
+	def __init__(self, endereco, sock):	
+		self.sucessor = ()
+>>>>>>> Stashed changes
 		self.sucessorIm = ()
-		self.derivacao = {}
+		self.antecessor = ()
+		#self.derivacao = {}
 		self.atalho = {}
+		self.root = ()
+
 		self.host, self.port = endereco
 		self.clien = sock
 		self.nomeArq = arquivo
 		
 	# solicita entrada na rede DHT
-	def entrarDHT(self, destino):
-		comando = 'Hello'
-		self.clien.enviar(comando, destino)
-		msg, endereco = self.clien.receber(1024)
+def entrarDHT(destino, no, sock):
+	comando = 'Hello'
+	sock.enviar(comando, destino)
+	msg, endereco = sock.receber(1024)
+	
+	if msg == 'RC':
+		print "Nao posso entrar, a rede esta cheia! \n"
+	else:
+		msg = msg.split('|', 4)	
+		no.id = int(msg[0])
+		no.root = (int(msg[1]), msg[2], int(msg[3]))
 		
-		if msg == 'RC':
-			print "Nao posso entrar, a rede esta cheia! \n"
-		else:
-			msg = msg.split('|', 4)	
-			self.id = int(msg[0])
-			self.root = (int(msg[1]), msg[2], int(msg[3]))
+		if msg[0] == msg[1]:
+			no.sucessor = (int(msg[1]), msg[2], int(msg[3])) # pode ser tirado posteriormente
+			no.antecessor = (int(msg[1]), msg[2], int(msg[3]))
+			no.sucessorIm = (int(msg[1]), msg[2], int(msg[3])) # Sucessor do Sucessor
+			#escutarRede(self, sock)
 			
-			if msg[0] == msg[1]:
-				self.sucessor = (int(msg[1]), msg[2], int(msg[3])) # pode ser tirado posteriormente
-				self.antecessor = (int(msg[1]), msg[2], int(msg[3]))
-				self.sucessorIm = (int(msg[1]), msg[2], int(msg[3])) # Sucessor do Sucessor
-				#escutarRede(self)
-				
-				#finguer table
-				for i in range(N):
-					self.derivacao[i] = (self.id + (2**i)) % (2**N)
-					self.atalho[i] = self.id
-			else:
-				no = (self.id, self.host, self.port)
-				self.inserirNo(no, self.root)
-				#escutarRede(self)
-							
-	def inserirNo(self, no, no1):
-		if no1[0] > no[0]:
-			# pede antecessor do root
-			antNo1 = encontrarAntecessor(no1, self.clien)
-			while (no1[0] > no[0]) and (antNo1[0] < no1[0]):
-				no1 = antNo1
-				antNo1 = encontrarAntecessor(no1, self.clien)
-
-			if no1[0] > no[0]:
-				self.sucessor = no1
-				self.sucessorIm = encontrarSucessor(no1, self.clien)
-				self.antecessor = antNo1
-				atualizarAnt(no1, no, self.clien)
-				atualizarSuc(antNo1, no, self.clien)
-				atualizarSucIm(antNo1, no1, self.clien)
-			else:
-				self.sucessor = encontrarSucessor(no1, self.clien)
-				self.sucessorIm = encontrarSucessor(self.sucessor, self.clien)
-				self.antecessor = no1
-				atualizarSuc(no1, no, self.clien)
-				atualizarAnt(self.sucessor, no, self.clien)
-				atualizarSucIm(no1, self.sucessor, self.clien)
+			#finguer table
+			for i in range(N):
+				no.derivacao[i] = (no.id + (2**i)) % (2**N)
+				no.atalho[i] = no.id
 		else:
-			sucNo1 = encontrarSucessor(no1, self.clien)
-			while (no1[0] < no[0]) and (sucNo1[0] > no1[0]):	
-				no1 = sucNo1
-				sucNo1 = encontrarSucessor(no1, self.clien)
-			if no1[0] < no[0]:
-				self.sucessor = sucNo1
-				self.sucessorIm = encontrarSucessor(sucNo1, self.clien)
-				self.antecessor = no1
-				atualizarSuc(no1, no, self.clien)
-				atualizarAnt(sucNo1, no, self.clien)
-				atualizarSucIm(no1, sucNo1, self.clien)
-			else:
-				self.sucessor = no1
-				self.sucessorIm = sucNo1
-				self.antecessor = encontrarAntecessor(no1, self.clien)
-				atualizarAnt(no1, no, self.clien)
-				atualizarSuc(self.antecessor, no, self.clien)
-				atualizarSucIm(self.antecessor, no1, self.clien)
-		print "No: " + str(no) + " Ant " + str(self.antecessor) + " Suc " + str(self.sucessor)
+			no = (no.id, no.host, no.port)
+			no.inserirNo(no, no.root, sock)
+			#escutarRede(self, sock)
+							
+def inserirNo(no, no1, sock):
+	if no1[0] > no[0]:
+		# pede antecessor do root
+		antNo1 = encontrarAntecessor(no1, sock)
+		while (no1[0] > no[0]) and (antNo1[0] < no1[0]):
+			no1 = antNo1
+			antNo1 = encontrarAntecessor(no1, sock)
+
+		if no1[0] > no[0]:
+			no.sucessor = no1
+			no.sucessorIm = encontrarSucessor(no1, sock)
+			no.antecessor = antNo1
+			atualizarAnt(no1, no, sock)
+			atualizarSuc(antNo1, no, sock)
+			atualizarSucIm(antNo1, no1, sock)
+		else:
+			no.sucessor = encontrarSucessor(no1, sock)
+			no.sucessorIm = encontrarSucessor(no.sucessor, sock)
+			no.antecessor = no1
+			atualizarSuc(no1, no, sock)
+			atualizarAnt(no.sucessor, no, sock)
+			atualizarSucIm(no1, no.sucessor, sock)
+	else:
+		sucNo1 = encontrarSucessor(no1, sock)
+		while (no1[0] < no[0]) and (sucNo1[0] > no1[0]):	
+			no1 = sucNo1
+			sucNo1 = encontrarSucessor(no1, sock)
+		if no1[0] < no[0]:
+			no.sucessor = sucNo1
+			no.sucessorIm = encontrarSucessor(sucNo1, sock)
+			no.antecessor = no1
+			atualizarSuc(no1, no, sock)
+			atualizarAnt(sucNo1, no, sock)
+			atualizarSucIm(no1, sucNo1, sock)
+		else:
+			no.sucessor = no1
+			no.sucessorIm = sucNo1
+			no.antecessor = encontrarAntecessor(no1, sock)
+			atualizarAnt(no1, no, sock)
+			atualizarSuc(no.antecessor, no, sock)
+			atualizarSucIm(no.antecessor, no1, sock)
+	print "No: " + str(no) + " Ant " + str(no.antecessor) + " Suc " + str(no.sucessor)
 	
 	
 def escutarRede(no, sock):
-	
-
+	print "Escutando Rede: "
 	while True:
-		print "ta na thread"
 		comando, endereco = sock.sock.recvfrom(1024)
 		comando = comando.split('|')
-		print str(comando)
+		print str(comando) + " aki"
 		if comando[0] == 'suc':	
 			env =  str(	no.sucessor[0]) +'|'+ str(no.sucessor[1]) +'|'+ str(no.sucessor[2])
 			print "Enviando sucessor: " + env + " para " + str(endereco)
@@ -224,14 +230,25 @@ def	main():
 
 	n1 = No(ender, clien, arquivo)
 	rendezvous = (socket.gethostbyname(socket.gethostname()), 12345)
-	n1.entrarDHT(rendezvous)
-	print "entra na thread"
 	t = threading.Thread(target=escutarRede, args=(n1,clien))
+<<<<<<< Updated upstream
 	t1 = threading.Thread(target=buscarArq, args=(n1,arquivo))
+=======
+	#t2 = threading.Thread(target=entrarDHT, args=(rendezvous, n1, clien))
+>>>>>>> Stashed changes
 	#t.daemon = True
+	#t2.daemon = True
 	t.start()
+<<<<<<< Updated upstream
 	t1.start()
 	clien.desconectar
+=======
+	#entrarDHT(rendezvous, n1, clien)
+	#t2.start()
+	while True:
+		pass
+	#clien.desconectar
+>>>>>>> Stashed changes
 
 	
 if __name__ == "__main__":

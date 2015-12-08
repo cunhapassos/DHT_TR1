@@ -3,52 +3,28 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>classe_dht.py</string>
+	<string>classe_socket.py</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>classe_no.py</string>
 			<key>lastUsed</key>
-			<date>2015-11-22T14:59:26Z</date>
-		</dict>
-		<dict>
-			<key>filename</key>
-			<string>no.py</string>
-			<key>lastUsed</key>
-			<date>2015-11-21T19:20:11Z</date>
-		</dict>
-		<dict>
-			<key>filename</key>
-			<string>servidor_rendezvous.py</string>
-			<key>lastUsed</key>
-			<date>2015-11-22T14:26:15Z</date>
-		</dict>
-		<dict>
-			<key>filename</key>
-			<string>testeClienteSocketUDP.py</string>
-			<key>lastUsed</key>
-			<date>2015-11-22T14:26:33Z</date>
-		</dict>
-		<dict>
-			<key>filename</key>
-			<string>testeServSocketUDP.py</string>
-			<key>lastUsed</key>
-			<date>2015-11-22T14:50:56Z</date>
+			<date>2015-12-04T18:23:06Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>classe_socket.py</string>
 			<key>lastUsed</key>
-			<date>2015-11-22T14:52:34Z</date>
+			<date>2015-12-04T18:23:06Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>classe_dht.py</string>
 			<key>lastUsed</key>
-			<date>2015-11-22T14:59:26Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2015-12-04T18:09:40Z</date>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
@@ -62,128 +38,51 @@
 				<key>column</key>
 				<integer>3</integer>
 				<key>line</key>
-				<integer>43</integer>
+				<integer>24</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>7</integer>
+			<integer>2</integer>
 		</dict>
 		<key>classe_no.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>16</integer>
+				<integer>3</integer>
 				<key>line</key>
-				<integer>5</integer>
+				<integer>101</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>88</integer>
 		</dict>
 		<key>classe_socket.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>15</integer>
-				<key>line</key>
 				<integer>2</integer>
+				<key>line</key>
+				<integer>38</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
-		<key>servidor_rendezvous.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>126</integer>
-				<key>line</key>
-				<integer>11</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>11</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>126</integer>
-				<key>line</key>
-				<integer>11</integer>
-			</dict>
-		</dict>
-		<key>testeClienteSocketUDP.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>126</integer>
-				<key>line</key>
-				<integer>14</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
-		<key>testeServSocketUDP.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>22</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>18</integer>
-				<key>line</key>
-				<integer>26</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>22</integer>
-			</dict>
+			<integer>25</integer>
 		</dict>
 	</dict>
 	<key>openDocuments</key>
 	<array>
-		<string>servidor_rendezvous.py</string>
 		<string>classe_dht.py</string>
 		<string>classe_no.py</string>
 		<string>classe_socket.py</string>
-		<string>testeServSocketUDP.py</string>
-		<string>testeClienteSocketUDP.py</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{236, 40}, {1069, 709}}</string>
+	<string>{{208, 53}, {749, 724}}</string>
 </dict>
 </plist>

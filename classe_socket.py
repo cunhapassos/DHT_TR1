@@ -36,7 +36,7 @@ class socketUDP:
 		return 'nack'
 	# OBS: falta tratar casos em que nunca se recebe o ack aou ackr de volta, talvez colocar um contador no lugar da flag resolva		
 	def receber(self, tam):
-		#self.sock.settimeout(None)
+		self.sock.settimeout(None)
 		msg, orig = self.sock.recvfrom(tam)
 		flag = 0
 		
