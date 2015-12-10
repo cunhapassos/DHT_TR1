@@ -35,7 +35,7 @@ def escutarRede(no, sock):
 		#OBS: Os formatos de msg a serem enviadas e recebidos serao do tipo:  comando|noId|noHost|noPorta
 		comando, endereco = sock.recvfrom(1024)
 		comando = comando.split('|')
-		print str(comando) + " aki" #OBS RETIRAR
+		#print str(comando) + " aki" #OBS RETIRAR
 		
 		if comando[0] == 'novo': # Novo No
 			no.id = int(comando[4])
@@ -59,23 +59,23 @@ def escutarRede(no, sock):
 			sock.sendto(env, endereco)
 		
 		if comando[0] == 'atuSuc':
-			no.sucessor = (comando[1], comando[2], comando[3])
+			no.sucessor = (int(comando[1]), comando[2], int(comando[3]))
 			print "Atualizado sucessor de: " + str(no.id) + " para " + str(no.sucessor)
 			# atualizar finger table
 
 		if comando[0] =='atuSucIm':
-			no.sucessorIm = (comando[1], comando[2], comando[3])
+			no.sucessorIm = (int(comando[1]), comando[2], int(comando[3]))
 			print "Atualizado sucessorIm de: " + str(no.id) + " para " + str(no.sucessorIm)
 
 		if comando[0] == 'atuAnt':
-			no.antecessor = (comando[1], comando[2], comando[3])
+			no.antecessor = (int(comando[1]), comando[2], int(comando[3]))
 			print "Atualizado antecessor de: " + str(no.id) + " para " + str(no.antecessor)
 		
 		if comando[0] == 'cheio':
 			print 'A rede ja esta cheia!!! Nao eh possivel inserir mais nos no DHT'
 		
 		if comando[0] == 'ping':
-			print 'pong'
+			#print 'pong'
 			sock.sendto('pong', endereco)
 			
 		if comando[0] == 'pong':
@@ -186,20 +186,21 @@ def encontrarAntecessor(no, sock):
 def ping(no, sock):
 	global queue
 	while True:
-		condition.acquire()
-		if len(queue) == MAX_PING:
-			print "Reorganizar" # mudar sucessor
+		if no.id != no.sucessor[0]:
+			condition.acquire()
+			if len(queue) == MAX_PING:
+				print "Reorganizar" # mudar sucessor
 
-		message = 'ping'
-		queue.append(message)
-		serverName = no.sucessor[1]
-		serverPort = no.sucessor[2]
-		sock.sendto(message,(serverName,serverPort))
+			message = 'ping'
+			queue.append(message)
+			serverName = no.sucessor[1]
+			serverPort = no.sucessor[2]
+			sock.sendto(message,(serverName,serverPort))
 
-		print "Emitiu ping"
-		condition.notify()
-		condition.release()
-		time.sleep(1)
+			print "Emitiu ping"
+			condition.notify()
+			condition.release()
+			time.sleep(1)
 
 				
 def entrarDHT(destino, no, sock):
@@ -220,8 +221,7 @@ def menu(no, sock):
 			t2.join()
 		# ver caso do ping qndo so tem um no na rede	
 		if comando == '2':
-			if no.id != no.sucessor[0]:
-				ping(no, sock)
+			ping(no, sock)
 			
 
 
