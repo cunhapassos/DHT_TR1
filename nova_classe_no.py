@@ -8,14 +8,16 @@ Copyright (c) 2015 __UnB__. All rights reserved.
 """
 import time
 import socket
+from Queue import Queue
 from threading import Thread, Condition               # Importa modulo socket
 
 N = 6
 queue = []
 MAX_PING = 6
 MAX_NO = 2**N
+suces = Queue(2)
 condition = Condition()
-
+condPerco = Condition()
 class No:
 	def __init__(self, endereco, sock):	
 		self.root = ()
@@ -31,6 +33,7 @@ class No:
 def escutarRede(no, sock):
 	print "Escutando Rede... "
 	global queue
+	global suces
 	while True:
 		#OBS: Os formatos de msg a serem enviadas e recebidos serao do tipo:  comando|noId|noHost|noPorta
 		comando, endereco = sock.recvfrom(1024)
@@ -41,18 +44,23 @@ def escutarRede(no, sock):
 			no.id = int(comando[4])
 			no.root = (int(comando[1]), comando[2], int(comando[3]))
 			inserirNo(no, no.root, sock)
-
-		
+	
 		if comando[0] == 'root':
 			msg = comando
 			inserirRoot(no, msg)
-
 		
 		if comando[0] == 'suc':	
 			env =  str(	no.sucessor[0]) +'|'+ str(no.sucessor[1]) +'|'+ str(no.sucessor[2])
 			print "Enviando sucessor: " + env + " para " + str(endereco)
 			sock.sendto(env, endereco)
-		
+			
+		if comando[0] == 'sucP':
+			env =  'sucR' +'|'+  str(	no.sucessor[0]) +'|'+ str(no.sucessor[1]) +'|'+ str(no.sucessor[2])
+			sock.sendto(env, endereco)
+			
+		if comando[0] == 'sucR':
+			suces.put((int(comando[1]), comando[2], int(comando[3])))
+			
 		if comando[0] == 'ant':
 			env =  str(no.antecessor[0]) +'|'+ str(no.antecessor[1]) +'|'+ str(no.antecessor[2])
 			print "Enviando antecessor: " + env + " para " + str(endereco)
@@ -163,7 +171,7 @@ def atualizarAnt(no, ant, sock):
 	antId, antHost, antPort = ant
 	env = 'atuAnt' + '|' + str(antId) + '|' + antHost + '|' + str(antPort)
 	sock.sendto(env, (noHost, noPort))
-
+############################################################
 # Enconta o sucessor de um no 
 def encontrarSucessor(no, sock):
 	noId, noHost, noPort = no
@@ -182,7 +190,16 @@ def encontrarAntecessor(no, sock):
 	noAnt = (int(noAnt[0]), noAnt[1], int(noAnt[2]))
 
 	return noAnt
+##############################################################
+def sucessor(no, sock):
+	global suces
+	noId, noHost, noPort = no
 
+	sock.sendto('sucP', (noHost, noPort))
+	noSuc = suces.get()
+
+	return noSuc
+	
 def ping(no, sock):
 	global queue
 	while True:
@@ -198,7 +215,6 @@ def ping(no, sock):
 			sock.sendto(message,(serverName,serverPort))
 
 			print "Emitiu ping"
-			condition.notify()
 			condition.release()
 			time.sleep(1)
 
@@ -207,12 +223,37 @@ def entrarDHT(destino, no, sock):
 	comando = 'Hello'
 	sock.sendto(comando, destino)
 
+def percorrerDHT(no, sock):
+	root = no.root
+	ns = (root[0], root[1], root[2])
+	if root == None:
+		print "DHT vazio"
+		return None
+	else:
+		print "###########################################"
+		print "#               NOS DA DHT               #"
+		print "###########################################"
+		print "No " + str(ns[0]) + ": porta " + str(ns[2])
+		ns = sucessor(ns, sock)
+
+		while ns[0] != root[0]:
+			print "No " + str(ns[0]) + ": porta " + str(ns[2])
+			ns = sucessor(ns, sock)
+
+			"""
+			if(root.nomeArq == arq):
+				return str("No: " + str(no[0]))
+			"""
+		print "-------------------------------------------"
+		print ""	
+		return None
 	
 def menu(no, sock):
 	while True:
 		print "O que deseja fazer?"
 		print "1 - Entrar na rede"
-		print "2 - Iniciar ping"	
+		print "2 - Iniciar ping"
+		print "3 - Percorrer rede"	
 		comando = raw_input("Digite um inteiro: ")
 		if comando == '1':
 			rendezvous = (socket.gethostbyname(socket.gethostname()), 12345)
@@ -222,6 +263,8 @@ def menu(no, sock):
 		# ver caso do ping qndo so tem um no na rede	
 		if comando == '2':
 			ping(no, sock)
+		if comando == '3':
+			percorrerDHT(no, sock)
 			
 
 
@@ -239,10 +282,6 @@ def	main():
 	t = Thread(target=escutarRede, args=(n1,sock))
 	t.start()
 	menu(n1, sock)
-
-	
-
-
 	
 	while True:
 		pass
