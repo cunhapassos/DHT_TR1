@@ -8,10 +8,14 @@ Copyright (c) 2015 __UnB__. All rights reserved.
 """
 import time
 import socket
-import threading               # Importa modulo socket
+from threading import Thread, Condition               # Importa modulo socket
 
 N = 6
+queue = []
+MAX_PING = 6
 MAX_NO = 2**N
+condition = Condition()
+
 class No:
 	def __init__(self, endereco, sock):	
 		self.root = ()
@@ -25,7 +29,8 @@ class No:
 		self.clien = sock # Retirar se for o caso
 		
 def escutarRede(no, sock):
-	print "Escutando Rede: "
+	print "Escutando Rede... "
+	global queue
 	while True:
 		#OBS: Os formatos de msg a serem enviadas e recebidos serao do tipo:  comando|noId|noHost|noPorta
 		comando, endereco = sock.recvfrom(1024)
@@ -35,13 +40,13 @@ def escutarRede(no, sock):
 		if comando[0] == 'novo': # Novo No
 			no.id = int(comando[4])
 			no.root = (int(comando[1]), comando[2], int(comando[3]))
-
 			inserirNo(no, no.root, sock)
 
 		
 		if comando[0] == 'root':
 			msg = comando
 			inserirRoot(no, msg)
+
 		
 		if comando[0] == 'suc':	
 			env =  str(	no.sucessor[0]) +'|'+ str(no.sucessor[1]) +'|'+ str(no.sucessor[2])
@@ -72,8 +77,11 @@ def escutarRede(no, sock):
 		if comando[0] == 'ping':
 			print 'pong'
 			sock.sendto('pong', endereco)
-		if comando[0] == 'teste':
-			print "imprimindo na principal"
+			
+		if comando[0] == 'pong':
+			condition.acquire()
+			queue.pop(0)
+			condition.release()
 			
 def inserirRoot(no, msg):
 	no.id = int(msg[1])
@@ -175,31 +183,47 @@ def encontrarAntecessor(no, sock):
 
 	return noAnt
 
-def ping(sock, no):
+def ping(no, sock):
+	global queue
+	while True:
+		condition.acquire()
+		if len(queue) == MAX_PING:
+			print "Reorganizar" # mudar sucessor
 
-	noId, noHost, noPorta = no.sucessor
-	if noId != no.root[0]:
-		print "ping"
-		sock.sendto('ping', (noHost, int(noPorta)))
-		msg, end = sock.recvfrom(1024)
-		if msg != 'pong':
-			print "Sucessor de " + str(no.id) + " nao responde!"
-			noId, noHost, noPorta = no.sucessorIm
+		message = 'ping'
+		queue.append(message)
+		serverName = no.sucessor[1]
+		serverPort = no.sucessor[2]
+		sock.sendto(message,(serverName,serverPort))
 
-			sock.sendto('ping', (noHost, int(noPorta)))
-			msg, end = sock.recvfrom(1024)
-			if msg == 'pong':
-				print "Atualizando sucessor..."
-				no.sucessor = no.sucessorIm
-				no.sucessorIm = encontrarSucessor(no.sucessor)
-				no.atualizarAnt(no.sucessor, (no.id, no.host, no.port))
-			else:
-				print "Nao foi posivel recuperar a rede!"
+		print "Emitiu ping"
+		condition.notify()
+		condition.release()
+		time.sleep(1)
+
 				
 def entrarDHT(destino, no, sock):
 	comando = 'Hello'
 	sock.sendto(comando, destino)
+
 	
+def menu(no, sock):
+	while True:
+		print "O que deseja fazer?"
+		print "1 - Entrar na rede"
+		print "2 - Iniciar ping"	
+		comando = raw_input("Digite um inteiro: ")
+		if comando == '1':
+			rendezvous = (socket.gethostbyname(socket.gethostname()), 12345)
+			t2 = Thread(target=entrarDHT, args=(rendezvous, no, sock))
+			t2.start()
+			t2.join()
+		# ver caso do ping qndo so tem um no na rede	
+		if comando == '2':
+			if no.id != no.sucessor[0]:
+				ping(no, sock)
+			
+
 
 def	main():
 	host = socket.gethostbyname(socket.gethostname()) # obtem o endereco IP da maquina local a partir do hostname da maquina local
@@ -212,22 +236,16 @@ def	main():
 	ender = (host, porta) 
 	n1 = No(ender, sock)
 
-	t = threading.Thread(target=escutarRede, args=(n1,sock))
+	t = Thread(target=escutarRede, args=(n1,sock))
 	t.start()
+	menu(n1, sock)
 
-	rendezvous = (socket.gethostbyname(socket.gethostname()), 12345)
-	t2 = threading.Thread(target=entrarDHT, args=(rendezvous, n1, sock))
-	t2.start()
 	
 
-	#t.daemon = True
-	#t2.daemon = True
 
-	#entrarDHT(rendezvous, n1, clien)
 	
 	while True:
 		pass
-	#clien.desconectar
 
 	
 if __name__ == "__main__":

@@ -3,28 +3,40 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>classe_socket.py</string>
+	<string>nova_classe_no.py</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>classe_no.py</string>
 			<key>lastUsed</key>
-			<date>2015-12-04T18:23:06Z</date>
+			<date>2015-12-09T22:15:29Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
-			<string>classe_socket.py</string>
+			<string>nova_classe_no.py</string>
 			<key>lastUsed</key>
-			<date>2015-12-04T18:23:06Z</date>
+			<date>2015-12-10T02:09:59Z</date>
 			<key>selected</key>
 			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
+			<string>classe_socket.py</string>
+			<key>lastUsed</key>
+			<date>2015-12-10T00:51:59Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
 			<string>classe_dht.py</string>
 			<key>lastUsed</key>
-			<date>2015-12-04T18:09:40Z</date>
+			<date>2015-12-08T23:00:28Z</date>
+		</dict>
+		<dict>
+			<key>filename</key>
+			<string>nova_classe_dht.py</string>
+			<key>lastUsed</key>
+			<date>2015-12-10T02:09:59Z</date>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
@@ -43,39 +55,85 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>2</integer>
+			<integer>5</integer>
 		</dict>
 		<key>classe_no.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>3</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>101</integer>
+				<integer>0</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>88</integer>
+			<integer>151</integer>
 		</dict>
 		<key>classe_socket.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>2</integer>
+				<integer>25</integer>
 				<key>line</key>
-				<integer>38</integer>
+				<integer>32</integer>
+			</dict>
+			<key>columnSelection</key>
+			<false/>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>8</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>10</integer>
+				<key>line</key>
+				<integer>32</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>25</integer>
+				<key>line</key>
+				<integer>32</integer>
+			</dict>
+		</dict>
+		<key>nova_classe_dht.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>10</integer>
+				<key>line</key>
+				<integer>3</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>25</integer>
+			<integer>0</integer>
+		</dict>
+		<key>nova_classe_no.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>7</integer>
+				<key>line</key>
+				<integer>240</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>69</integer>
 		</dict>
 	</dict>
 	<key>openDocuments</key>
 	<array>
+		<string>nova_classe_dht.py</string>
+		<string>nova_classe_no.py</string>
 		<string>classe_dht.py</string>
 		<string>classe_no.py</string>
 		<string>classe_socket.py</string>
@@ -83,6 +141,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{208, 53}, {749, 724}}</string>
+	<string>{{-1176, 44}, {749, 716}}</string>
 </dict>
 </plist>
