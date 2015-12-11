@@ -32,9 +32,23 @@ class No:
 
 		self.host, self.port = endereco
 		self.clien = sock # Retirar se for o caso
+	
+	def getEndereco(self):
+		return (self.host, self.port)
 
 	def preencherChaves(self, tpl):
 		self.chaves.append(tpl)
+
+	def preencherAtalho(self, tpl, endereco):
+		if self.atalho.has_key(tpl[0]):
+			print "Tem chave"
+			self.atalho[tpl[0]].append([tpl[1], endereco[0], endereco[1]])
+			print self.atalho
+		else:
+			print "Nao tem chave"
+			self.atalho[tpl[0]] = []
+			self.atalho[tpl[0]].append([tpl[1], endereco[0], endereco[1]])
+			print self.atalho
 
 def calculaHash(nome):
 	strHash = hashlib.md5(nome)
@@ -101,6 +115,12 @@ def escutarRede(no, sock):
 			condition.acquire()
 			queue.pop(0)
 			condition.release()
+		
+		if comando[0] == "refArq":
+			endArq = (comando[2], int(comando[3]))
+			tplArq = (int(comando[4]), comando[5])
+			no.preencherAtalho(tplArq, endArq)
+			
 			
 def inserirRoot(no, msg):
 	no.id = int(msg[1])
@@ -229,6 +249,31 @@ def ping(no, sock):
 			condition.release()
 			time.sleep(1)
 
+def encontrarReferencia(no, sock, tpl):
+	#print str(no[0])+"|||"
+	noId, noHost, noPort = no
+	antId, antHost, antPort = encontrarAntecessor(no, sock)
+	sucId, sucHost, sucPort = encontrarSucessor(no, sock)
+	
+	if(int(tpl[0]) < no[0]) and (int(tpl[0]) >= antId):
+		#print "Inicio"
+		preencherAtalho(tpl, no.getEndereco())
+	else:
+		auxAtual = no
+		auxSuc = sucessor(no, sock)
+		
+		while auxSuc[0] != auxAtual[0]:
+			if auxSuc[0] > auxAtual[0]:
+				antId, antHost, antPort = encontrarAntecessor(no, sock)
+				if(int(tpl[0]) < auxAtual[0]) and (int(tpl[0]) >= antId):
+					break
+				auxAtual = auxSuc
+				auxSuc = sucessor(auxSuc, sock)
+			else:
+				break
+		env = 'refArq' + '|' + str(auxAtual[0]) + '|' + auxAtual[1] + '|' + str(auxAtual[2]) + '|' + tpl[0] + tpl [1]
+		sock.sendto(env, (auxAtual[1], auxAtual[2]))
+
 				
 def entrarDHT(destino, no, sock):
 	comando = 'Hello'
@@ -263,6 +308,7 @@ def criarArquivo(no, sock):
 	nomeArq = raw_input("Digite o nome do arquivo a ser criado: ")
 	valHash = calculaHash(nomeArq)
 	no.preencherChaves((valHash, nomeArq))
+	encontrarReferencia(no, sock, (valHash, nomeArq))
 	print "Arquivo criado com sucesso"
 
 def buscarArquivo(no, sock):
@@ -296,6 +342,7 @@ def menu(no, sock, ender):
 	t2 = Thread(target=entrarDHT, args=(rendezvous, no, sock))
 	t2.start()
 	t2.join()
+	pause = raw_input("Tecle Enter para continuar...")
 	
 	global conexao
 	conexao = True
@@ -309,7 +356,7 @@ def menu(no, sock, ender):
 		print " 1 - Iniciar ping"
 		print " 2 - Percorrer rede"
 		print " 3 - Criar arquivo"
-		print " 4 - Buscar arquivo na rede"
+#		print " 4 - Buscar arquivo na rede"
 #		print " 5 - Desconectar"
 		print ""
 		
@@ -332,9 +379,10 @@ def	main():
 	
 	ender = (host, porta) 
 	n1 = No(ender, sock)
-
+	
 	t = Thread(target=escutarRede, args=(n1,sock))
 	t.start()
+	
 	menu(n1, sock, ender)
 	
 	while True:
