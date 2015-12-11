@@ -55,7 +55,7 @@ def escutarRede(no, sock):
 			sock.sendto(env, endereco)
 			
 		if comando[0] == 'sucP':
-			env =  'sucR' +'|'+  str(	no.sucessor[0]) +'|'+ str(no.sucessor[1]) +'|'+ str(no.sucessor[2])
+			env =  'sucR' +'|'+  str(no.sucessor[0]) +'|'+ str(no.sucessor[1]) +'|'+ str(no.sucessor[2])
 			sock.sendto(env, endereco)
 			
 		if comando[0] == 'sucR':
@@ -105,7 +105,7 @@ def inserirRoot(no, msg):
 		no.derivacao[i] = (no.id + (2**i)) % (2**N)
 		no.finguer[i] = no.id		
 	"""	
-
+"""
 def inserirNo(no, no1, sock):
 	noEnt = (no.id, no.host, no.port)
 	if no1[0] > noEnt[0]:
@@ -118,10 +118,11 @@ def inserirNo(no, no1, sock):
 		if no1[0] > noEnt[0]:
 			print no1
 			no.sucessor = no1
-			
-			#no.sucessorIm = encontrarSucessor(no1, sock)
+			no.sucessorIm = encontrarSucessor(no1, sock)
 			no.antecessor = antNo1
 			atualizarAnt(no1, noEnt, sock)
+			suc = encontrarSucessor(no.sucessorIm, sock)
+			atualizarSucIm(no1, suc, sock)
 			atualizarSuc(antNo1, noEnt, sock)
 			atualizarSucIm(antNo1, no1, sock)
 		else:
@@ -139,21 +140,81 @@ def inserirNo(no, no1, sock):
 		if no1[0] < noEnt[0]:
 			print sucNo1
 			no.sucessor = sucNo1
-			
-			#no.sucessorIm = encontrarSucessor(sucNo1, sock)
+			no.sucessorIm = encontrarSucessor(sucNo1, sock)
 			no.antecessor = no1
 			atualizarSuc(no1, noEnt, sock)
-			atualizarAnt(sucNo1, noEnt, sock)
 			atualizarSucIm(no1, sucNo1, sock)
+			atualizarAnt(sucNo1, noEnt, sock)
+			sucIm = encontrarSucessor(no.sucessorIm, sock)
+			atualizarSucIm(sucNo1, sucIm, sock)
+			suc = encontrarSucessor(sucIm, sock)
+			atualizarSucIm(no.sucessorIm, suc, sock)
+
 		else:
 			no.sucessor = no1
 			no.sucessorIm = sucNo1
 			no.antecessor = encontrarAntecessor(no1, sock)
 			atualizarAnt(no1, noEnt, sock)
+			sucIm = encontrarSucessor(sucNo1, sock)
+			atualizarSucIm(no1, sucIm, sock)
 			atualizarSuc(no.antecessor, noEnt, sock)
 			atualizarSucIm(no.antecessor, no1, sock)
+			antAnt = encontrarAntecessor(no.antecessor, sock)
+			atualizarSucIm(antAnt, noEnt, sock)
 	print "No: " + str(noEnt) + " Ant " + str(no.antecessor) + " Suc " + str(no.sucessor)
+"""	
+def inserirNo(no, no1, sock):
+	noEnt = (no.id, no.host, no.port)
+	root = no1
+	if no1[0] > noEnt[0]:
+		# pede antecessor do root
+		antNo1 = encontrarAntecessor(no1, sock)
+		while (no1[0] > noEnt[0]) and (antNo1[0] < no1[0]):
+			no1 = antNo1
+			antNo1 = encontrarAntecessor(no1, sock)
 
+		if no1[0] > noEnt[0]:
+			print no1
+			no.sucessor = no1
+			no.antecessor = antNo1
+			atualizarAnt(no1, noEnt, sock)
+			atualizarSuc(antNo1, noEnt, sock)
+		else:
+			no.sucessor = encontrarSucessor(no1, sock)
+			no.antecessor = no1
+			atualizarSuc(no1, noEnt, sock)
+			atualizarAnt(no.sucessor, noEnt, sock)
+	else:
+		sucNo1 = encontrarSucessor(no1, sock)
+		while (no1[0] < noEnt[0]) and (sucNo1[0] > no1[0]):	
+			no1 = sucNo1
+			sucNo1 = encontrarSucessor(no1, sock)
+		if no1[0] < noEnt[0]:
+			print sucNo1
+			no.sucessor = sucNo1
+			no.antecessor = no1
+			atualizarSuc(no1, noEnt, sock)
+			atualizarAnt(sucNo1, noEnt, sock)
+
+		else:
+			no.sucessor = no1
+			no.antecessor = encontrarAntecessor(no1, sock)
+			atualizarAnt(no1, noEnt, sock)
+			atualizarSuc(no.antecessor, noEnt, sock)
+			
+	atualizarSucIm(no.antecessor, no.sucessor, sock)
+	no1 = (no.id, no.host, no.port)
+	if no.antecessor != no.sucessor:
+		print "10"
+		no.sucessorIm = encontrarSucessor(no.sucessor, sock)
+		print "12"
+		atualizarIm(no1, no.sucessor, sock)
+		print "13"
+	else:
+		print "11"
+		no.sucessorIm = no1
+	print "No: " + str(noEnt) + " Ant " + str(no.antecessor) + " Suc " + str(no.sucessor) + " SucIm " + str(no.sucessorIm)
+		
 def atualizarSuc(no, suc, sock):
 	noId, noHost, noPort = no
 	sucId, sucHost, sucPort = suc
@@ -181,6 +242,7 @@ def encontrarSucessor(no, sock):
 	noSuc = (int(noSuc[0]), noSuc[1], int(noSuc[2]))
 
 	return noSuc
+	
 
 def encontrarAntecessor(no, sock):
 	noId, noHost, noPort = no
@@ -199,6 +261,23 @@ def sucessor(no, sock):
 	noSuc = suces.get()
 
 	return noSuc
+
+
+def atualizarIm(no1, sucNo1, sock):
+	ns = (no1[0], no1[1], no1[2])
+	
+	sucIm = encontrarSucessor(sucNo1, sock)
+	print "1"
+	while sucIm[0] != no1[0]:
+		print "2"
+		suc = sucIm
+		sucIm = encontrarSucessor(suc, sock)
+		atualizarSucIm(sucNo1, sucIm, sock)
+		sucNo1 = suc
+		print "3"			
+
+	return None
+
 	
 def ping(no, sock):
 	global queue
@@ -206,8 +285,16 @@ def ping(no, sock):
 		if no.id != no.sucessor[0]:
 			condition.acquire()
 			if len(queue) == MAX_PING:
-				print "Reorganizar" # mudar sucessor
-
+				print "No " + str(no.sucessor) + " nao responde!" # mudar sucessor
+				print "Atualizando sucessor..."
+				print "Novo sucessor " + str(no.sucessor)
+				print "SucessorIm " + str(no.sucessorIm)
+				
+				no.sucessor = no.sucessorIm
+				no.sucessorIm = sucessor(no.sucessor, sock) # problema se o sucessor de sucessorIm for o proprio no da problema
+				
+				print "Novo sucessor " + str(no.sucessor)
+				print "SucessorIm " + str(no.sucessorIm)
 			message = 'ping'
 			queue.append(message)
 			serverName = no.sucessor[1]
@@ -253,7 +340,8 @@ def menu(no, sock):
 		print "O que deseja fazer?"
 		print "1 - Entrar na rede"
 		print "2 - Iniciar ping"
-		print "3 - Percorrer rede"	
+		print "3 - Percorrer rede"
+		print "4 - Ver sucessor 1 e 2"	
 		comando = raw_input("Digite um inteiro: ")
 		if comando == '1':
 			rendezvous = (socket.gethostbyname(socket.gethostname()), 12345)
@@ -265,6 +353,10 @@ def menu(no, sock):
 			ping(no, sock)
 		if comando == '3':
 			percorrerDHT(no, sock)
+		if comando == '4':
+			print "Antecessor de " + str(no.id) + " eh " + str(no.antecessor)
+			print "Sucessor de " + str(no.id) + " eh " + str(no.sucessor)
+			print "SucessorIm de " + str(no.id) + " eh " + str(no.sucessorIm)
 			
 
 
