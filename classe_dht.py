@@ -1,7 +1,7 @@
 import socket
 import random
 import md5
-from nova_classe_no import *
+from classe_no import *
 from classe_socket import *
 
 
